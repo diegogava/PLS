@@ -1,0 +1,62 @@
+﻿Build started 18/06/2014 20:39:42.
+     1>Project "C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\CudaPLS.vcxproj" on node 2 (Build target(s)).
+     1>AddCudaCompileDeps:
+         C:\Program Files\Microsoft Visual Studio 11.0\VC\bin\cl.exe /E /nologo /showIncludes /TP /D__CUDACC__ /DWIN32 /D_DEBUG /D_CONSOLE /D_MBCS /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\bin" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\include" /I. /FIcuda_runtime.h /c "C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\cuda_pls.cu" 
+       CudaBuild:
+         Compiling CUDA source file cuda_pls.cu...
+         cmd.exe /C "C:\Users\grupo diego\AppData\Local\Temp\tmp36c6b028f684473b8693466c8e358650.cmd"
+         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\bin\nvcc.exe" -gencode=arch=compute_10,code=\"sm_10,compute_10\" --use-local-env --cl-version 2012 -ccbin "C:\Program Files\Microsoft Visual Studio 11.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\include"  -G   --keep-dir Debug -maxrregcount=0  --machine 32 --compile -cudart static  -g   -DWIN32 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o Temp\Debug\cuda_pls.cu.obj "C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\cuda_pls.cu"
+         
+         C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\bin\nvcc.exe" -gencode=arch=compute_10,code=\"sm_10,compute_10\" --use-local-env --cl-version 2012 -ccbin "C:\Program Files\Microsoft Visual Studio 11.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\include"  -G   --keep-dir Debug -maxrregcount=0  --machine 32 --compile -cudart static  -g   -DWIN32 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o Temp\Debug\cuda_pls.cu.obj "C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\cuda_pls.cu" 
+     1>nvcc : warning : The 'compute_10' and 'sm_10' architectures are deprecated, and may be removed in a future release.
+     1>C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\libs\opencv_v2-4-9_32bits\include\opencv2/core/types_c.h(320): warning : variable "t" is used before its value is set
+     1>C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\libs\opencv_v2-4-9_32bits\include\opencv2/ml/ml.hpp(955): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvForestTree"
+     1>C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\libs\opencv_v2-4-9_32bits\include\opencv2/ml/ml.hpp(1143): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvBoostTree"
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(51): warning : variable "A_gpu" was declared but never referenced
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(51): warning : variable "B_gpu" was declared but never referenced
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(51): warning : variable "RESULT_GPU" was declared but never referenced
+     1>C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\libs\opencv_v2-4-9_32bits\include\opencv2/core/types_c.h(320): warning : variable "t" is used before its value is set
+     1>C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\libs\opencv_v2-4-9_32bits\include\opencv2/ml/ml.hpp(955): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvForestTree"
+     1>C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\libs\opencv_v2-4-9_32bits\include\opencv2/ml/ml.hpp(1143): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvBoostTree"
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(51): warning : variable "A_gpu" was declared but never referenced
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(51): warning : variable "B_gpu" was declared but never referenced
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(51): warning : variable "RESULT_GPU" was declared but never referenced
+         cuda_pls.cu
+     1>c:\users\grupo diego\dropbox_diego\dropbox\poc 2\pls\cudapls\util.h(46): warning C4244: 'return' : conversion from '__int64' to 'int', possible loss of data
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(51): warning C4101: 'A_gpu' : unreferenced local variable
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(51): warning C4101: 'B_gpu' : unreferenced local variable
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(51): warning C4101: 'RESULT_GPU' : unreferenced local variable
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(113): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(114): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(137): warning C4018: '<' : signed/unsigned mismatch
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(166): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>C:/Users/grupo diego/Dropbox_DIEGO/Dropbox/POC 2/PLS/CudaPLS/cuda_pls.cu(171): warning C4244: 'initializing' : conversion from 'float' to 'long', possible loss of data
+       ClCompile:
+         C:\Program Files\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\include" /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Temp\Debug\\" /Fd"Temp\Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         main.cpp
+     1>c:\users\grupo diego\dropbox_diego\dropbox\poc 2\pls\cudapls\util.h(46): warning C4244: 'return' : conversion from '__int64' to 'int', possible loss of data
+     1>c:\users\grupo diego\dropbox_diego\dropbox\poc 2\pls\cudapls\pls.h(46): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\grupo diego\dropbox_diego\dropbox\poc 2\pls\cudapls\pls.h(47): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\grupo diego\dropbox_diego\dropbox\poc 2\pls\cudapls\pls.h(72): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\grupo diego\dropbox_diego\dropbox\poc 2\pls\cudapls\pls.h(103): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>c:\users\grupo diego\dropbox_diego\dropbox\poc 2\pls\cudapls\pls.h(108): warning C4244: 'initializing' : conversion from 'float' to 'long', possible loss of data
+     1>c:\users\grupo diego\dropbox_diego\dropbox\poc 2\pls\cudapls\pls.h(274): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\grupo diego\dropbox_diego\dropbox\poc 2\pls\cudapls\pls.h(314): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>c:\users\grupo diego\dropbox_diego\dropbox\poc 2\pls\cudapls\pls.h(320): warning C4244: 'initializing' : conversion from 'float' to 'long', possible loss of data
+       Link:
+         C:\Program Files\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\\Debug\CudaPLS.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\lib\Win32" cudart.lib cublas.lib cublas_device.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib opencv_core249d.lib opencv_imgproc249d.lib opencv_highgui249d.lib opencv_ml249d.lib opencv_video249d.lib opencv_features2d249d.lib opencv_calib3d249d.lib opencv_objdetect249d.lib opencv_contrib249d.lib opencv_legacy249d.lib opencv_flann249d.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\\Debug\CudaPLS.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\\Debug\CudaPLS.lib" /MACHINE:X86 Temp\Debug\cuda_pls.cu.obj
+         Temp\Debug\main.obj
+         LINK : C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\\Debug\CudaPLS.exe not found or not built by the last incremental link; performing full link
+         CudaPLS.vcxproj -> C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\\Debug\CudaPLS.exe
+       PostBuildEvent:
+         echo copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\bin\cudart*.dll" "C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\\Debug\"
+         copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\bin\cudart*.dll" "C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\\Debug\"
+         :VCEnd
+         copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\bin\cudart*.dll" "C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\\Debug\"
+         C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\bin\cudart32_60.dll
+                 1 file(s) copied.
+     1>Done Building Project "C:\Users\grupo diego\Dropbox_DIEGO\Dropbox\POC 2\PLS\CudaPLS\CudaPLS.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:47.42

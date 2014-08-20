@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="PLSCuda.cu">
+      <Filter>PLS\PLSCuda</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="PLS.cpp">
+      <Filter>PLS</Filter>
+    </ClCompile>
+    <ClCompile Include="PLSCpu.cpp">
+      <Filter>PLS\PLSCpu</Filter>
+    </ClCompile>
+    <ClCompile Include="PLSCublas.cpp">
+      <Filter>PLS\PLSCublas</Filter>
+    </ClCompile>
+    <ClCompile Include="FeatureExtractionClustering.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="util.h" />
+    <ClInclude Include="PLS.h">
+      <Filter>PLS</Filter>
+    </ClInclude>
+    <ClInclude Include="PLSCpu.h">
+      <Filter>PLS\PLSCpu</Filter>
+    </ClInclude>
+    <ClInclude Include="PLSCublas.h">
+      <Filter>PLS\PLSCublas</Filter>
+    </ClInclude>
+    <ClInclude Include="PLSCuda.cuh">
+      <Filter>PLS\PLSCuda</Filter>
+    </ClInclude>
+    <ClInclude Include="FeatureExtractionClustering.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="PLS">
+      <UniqueIdentifier>{cdab0317-55e9-4345-83b3-f4e34635a78c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PLS\PLSCpu">
+      <UniqueIdentifier>{07a1c5bc-a9d8-4991-9977-a3a25b8c2e62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PLS\PLSCublas">
+      <UniqueIdentifier>{3c4313cf-ac72-4140-9e0d-a3c75d59459a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PLS\PLSCuda">
+      <UniqueIdentifier>{6fb522e0-e35c-4e0b-8d2f-60ddf79b0864}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
