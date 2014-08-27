@@ -2,6 +2,8 @@
 
 #include <opencv/cv.h>
 #include "util.h"
+#include <time.h>
+#include <stdlib.h>
 #include <unordered_map>
 
 class PLS{
