@@ -59,7 +59,7 @@ void PLSCpu::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 	
 	
 	for (int index1 = 0; index1 < nMaxIterations; index1++) {
-
+		std::cout << " Iteracao: " << index1 << std::endl;
 		//Finding the column having the highest norm
 		MaxValX = 0;
 		MaxValY = 0;
