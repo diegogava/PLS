@@ -56,10 +56,10 @@ void PLSCpu::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 	tTemp.create(X.rows, 1, CV_32F);
 	uTemp.create(Y.rows, 1, CV_32F);
 	std::cout << "Versao sequencial" << std::endl;
-	
+	tic("Total");
 	
 	for (int index1 = 0; index1 < nMaxIterations; index1++) {
-		std::cout << " Iteracao: " << index1 << std::endl;
+		std::cout << " ITERACAO DO LACO MAIOR: " << index1 << std::endl;
 		//Finding the column having the highest norm
 		MaxValX = 0;
 		MaxValY = 0;
@@ -68,6 +68,7 @@ void PLSCpu::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 		TempX.create(X.rows, 1, X.type());
 		TempY.create(Y.rows, 1, Y.type());
 
+		tic("Acha maior norma X");
 		for (int index3 = 0; index3 < X.cols; index3++) {
 			for (int index2 = 0; index2 < X.rows; index2++) {
 				TempX.at<float>(index2, 0) = X.at<float>(index2, index3);
@@ -77,6 +78,8 @@ void PLSCpu::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 				MaxIndexX = index3;
 			}
 		}
+		tac("Acha maior norma X");
+		tic("Acha maior norma Y");
 		for (int index3 = 0; index3 < Y.cols; index3++) {
 			for (int index2 = 0; index2 < Y.rows; index2++) {
 				TempY.at<float>(index2, 0) = Y.at<float>(index2, index3);
@@ -87,22 +90,38 @@ void PLSCpu::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 			}
 		}
 
+		tac("Acha maior norma Y");
+		tic("Salva Resultados em tTemp e uTemp");
 		for (int index3 = 0; index3 < X.rows; index3++) {
 			tTemp.at<float>(index3, 0) = X.at<float>(index3, MaxIndexX);
 			uTemp.at<float>(index3, 0) = Y.at<float>(index3, MaxIndexY);
 		}
+		tac("Salva Resultados em tTemp e uTemp");
 
+		tic("GPU Iterations");
 		// Iteration for Outer Modelling
 		for (int index2 = 0; index2 < nMaxOuter; index2++) {
-		
-			tic("mulT1"); wTemp = X.t() * uTemp;				tac("mulT1");
-			tic("div1"); wTemp = wTemp / cv::norm(wTemp);		tac("div1");
-			tic("mul1"); tNew = X * wTemp;						tac("mul1");
-			tic("mulT2"); qTemp = Y.t() * tNew;					tac("mulT2");
-			tic("div2"); qTemp = qTemp / cv::norm(qTemp);		tac("div2");
-			tic("mul2"); uTemp = Y * qTemp;						tac("mul2");
+			std::cout << " Iteracao do ITERATIONS: " << index2 << std::endl;
+			//tic("mulT1"); 
+			wTemp = X.t() * uTemp;				
+			//tac("mulT1");
+			//tic("div1"); 
+			wTemp = wTemp / cv::norm(wTemp);		
+			//tac("div1");
+			//tic("mul1"); 
+			tNew = X * wTemp;						
+			//tac("mul1");
+			//tic("mulT2"); 
+			qTemp = Y.t() * tNew;
+			//tac("mulT2");
+			//tic("div2"); 
+			qTemp = qTemp / cv::norm(qTemp);		
+			//tac("div2");
+			//tic("mul2"); 
+			uTemp = Y * qTemp;						
+			//tac("mul2");
 
-			tic("final");
+			//tic("final");
 			TempVal = cv::norm(tTemp - tNew);
 			//std::cout << index2 << " - " << std::fixed << TempVal << std::endl;
 
@@ -110,47 +129,68 @@ void PLSCpu::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 				break;
 			}
 			tTemp = tNew.clone();
-			tac("final");
+			//tac("final");
 
 			//system("pause");
 
 		}
-
-		
+		tac("GPU Iterations");
+		tic("GPU Deflation");
 		// Residual Deflation
-		tic("mulT3");tNorm = tTemp.t() * tTemp; tac("mulT3");
-		tic("mulT4"); bTemp = uTemp.t() * tTemp / tNorm.at<float>(0, 0); tac("mulT4");
-		tic("mulT5"); pTemp = X.t() * tTemp / tNorm.at<float>(0, 0); tac("mulT5");
-		tic("expr1"); X = X - tTemp * pTemp.t(); tac("expr1"); 
-		tic("expr2"); Y = Y - bTemp.at<float>(0, 0) * (tTemp * qTemp.t()); tac("expr2");
+		//tic("mulT3");
+		tNorm = tTemp.t() * tTemp; 
+		//tac("mulT3");
+		//tic("mulT4"); 
+		bTemp = uTemp.t() * tTemp / tNorm.at<float>(0, 0); 
+		//tac("mulT4");
+		//tic("mulT5"); 
+		pTemp = X.t() * tTemp / tNorm.at<float>(0, 0); 
+		//tac("mulT5");
+		//tic("expr1"); 
+		X = X - tTemp * pTemp.t(); 
+		//tac("expr1"); 
+		//tic("expr2"); 
+		Y = Y - bTemp.at<float>(0, 0) * (tTemp * qTemp.t()); 
+		//tac("expr2");
 
-
+		tac("GPU Deflation");
+		tic("Salva Resultados em T e U");
 		// Saving Results to Outputs.
 		for (int index3 = 0; index3 != X.rows; index3++) {
 			T.at<float>(index3, index1) = tTemp.at<float>(index3, 0);
 			U.at<float>(index3, index1) = uTemp.at<float>(index3, 0);
 		}
+		tac("Salva Resultados em T e U");
+		tic("Salva Resultados em P e W");
 		for (int index3 = 0; index3 != X.cols; index3++) {
 			P.at<float>(index3, index1) = pTemp.at<float>(index3, 0);
 			W.at<float>(index3, index1) = wTemp.at<float>(index3, 0);
 		}
-
+		tac("Salva Resultados em P e W");
+		tic("Salva Resultados em Q");
 		for (int index3 = 0; index3 != qTemp.rows; index3++) {
 			Q.at<float>(index3, index1) = qTemp.at<float>(index3, 0);
 		}
+		tac("Salva Resultados em Q");
+		tic("Copia resultado para B");
 		B.at<float>(index1, index1) = bTemp.at<float>(0, 0);
+		tac("Copia resultado para B");
 
+		tic("Teste (normX == 0) || (normY == 0) ");
 		// Checking the residue
 		if ((cv::norm(X) == 0) || (cv::norm(Y) == 0)) {
 			break;
 		}
+		tac("Teste (normX == 0) || (normY == 0) ");
 	}
 	// return BStar
 	cv::Mat bstar = ((W * (P.t() * W).inv()) * (T.t() * T).inv() * T.t() * _Y);	
 
+	tac("Total");
 	std::cout << "Matriz bstar CPU [33056][1]: \n";
 
-	for(int i=33030;i<33056;i++){
+	for(int i=0;i<20;i++){
 		std::cout << bstar.at<float>(i,0) << " " << std::endl;
 	}
+
 }

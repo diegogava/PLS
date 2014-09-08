@@ -6,7 +6,7 @@
 #include "PLSCuda.cuh"
 
 #define __EXTRACT__ false
-#define __DEBUG__ true
+#define __DEBUG__ false
 
 
 //#define __CPU__ "CPU"
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 	int nGroups_Extaction = 1;
 	int n_Klusters = 10;
 	int factors = 10; // get factors (#factors in PLS)	
-	int n_linhas_test = 100;
+	int n_linhas_test = 200;
 
 	// set counter
 	counter_t counter;
