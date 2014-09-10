@@ -15,7 +15,7 @@ public:
 
 protected:
 
-	void PLSCuda::gpu_FindHighestNormX(cv::Mat& X, cv::Mat& TempX, double& MaxValX, int& MaxIndexX, float* X_gpu);
+	void PLSCuda::gpu_FindHighestNormX(cv::Mat X, cv::Mat TempX, double& MaxValX, int& MaxIndexX, float* X_gpu);
 	void PLSCuda::gpu_FindHighestNormY(cv::Mat& Y, cv::Mat& TempY, double& MaxValY, int& MaxIndexY, float* Y_gpu);
 	void PLSCuda::gpu_SaveResults_tTemp_uTemp(cv::Mat X, cv::Mat Y, cv::Mat tTemp, cv::Mat uTemp, cv::Mat tTemp_TEST, cv::Mat uTemp_TEST, double MaxIndexX, double MaxIndexY, float* X_gpu, float* Y_gpu, float* tTemp_gpu, float* uTemp_gpu);
 	void PLSCuda::gpu_SaveResults_T_U (cv::Mat X, cv::Mat T, cv::Mat U, cv::Mat tTemp, cv::Mat uTemp, cv::Mat T_TEST, cv::Mat U_TEST, int index1, int nMaxIterations, float* T_gpu,float* U_gpu,float* tTemp_gpu,float* uTemp_gpu);
