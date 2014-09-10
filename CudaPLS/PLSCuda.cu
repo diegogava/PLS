@@ -4,7 +4,8 @@
 #include <device_launch_parameters.h>
 #include <time.h>
 #include <numeric>
-#include <typeinfo> 
+#include <typeinfo>
+#include <iomanip>
 #include "util.h"
 
 #ifndef __CUDACC__  
@@ -21,14 +22,12 @@ void PLSCuda::CHECK(cudaError_t cudaStatus, std::string prefixMessage){
 	}
 }
 
-
-
 __device__ double normDevice;
 __device__ double auxFirstElement = -1000;
 __device__ double MaxValXDevice = -10;
 __device__ double MaxValYDevice = -10;
 __device__ int MaxIndexXDevice = -10;
-__device__ int MaxIndexYDevice = -10;
+__device__ float MaxIndexYDevice = -10;
 
 
 __global__ void mulCUDA(float *A, float *B, float *C, int Arows, int Acols, int Brows, int Bcols);
@@ -181,12 +180,12 @@ void PLSCuda::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 			
 		tic("Acha maior norma Y");gpu_FindHighestNormY (Y, TempY, MaxValY, MaxIndexY, Y_gpu);tac("Acha maior norma Y");
 			
-		/*for (int index3 = 0; index3 < X.rows; index3++) {
+		for (int index3 = 0; index3 < X.rows; index3++) {
 
 			tTemp.at<float>(index3, 0) = X.at<float>(index3, MaxIndexX);
 			uTemp.at<float>(index3, 0) = Y.at<float>(index3, MaxIndexY);
 
-		}*/
+		}
 		
 		tic("Salva Resultados em tTemp e uTemp");gpu_SaveResults_tTemp_uTemp (X, Y, tTemp, uTemp, tTemp_TEST, uTemp_TEST, MaxIndexX, MaxIndexY, X_gpu, Y_gpu, tTemp_gpu, uTemp_gpu ); tac("Salva Resultados em tTemp e uTemp");
 
@@ -302,11 +301,16 @@ void PLSCuda::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 
 }
 
-void PLSCuda::gpu_FindHighestNormX(cv::Mat& X, cv::Mat& TempX, double& MaxValX, int& MaxIndexX, float* X_gpu){
+void PLSCuda::gpu_FindHighestNormX(cv::Mat X, cv::Mat TempX, double& MaxValX, int& MaxIndexX, float* X_gpu){
 
 	int index3;
 	double normX;
 	int index;
+	cv::Mat X_test;
+
+	X_test.create(X.rows, X.cols, CV_32F);
+
+
 
 	for (index3 = 0; index3 < X.cols; index3++) {
 
@@ -314,26 +318,54 @@ void PLSCuda::gpu_FindHighestNormX(cv::Mat& X, cv::Mat& TempX, double& MaxValX, 
 			TempX.at<float>(index2, 0) = X.at<float>(index2, index3);
 		}
 
+		
+		//if(cv::norm(TempX) != MaxValX)
+			//std::cout << "Index = " << index3 << " cv::norm(TempX) = " << cv::norm(TempX) << " MaxValX = " << MaxValX <<std::endl;
+
 		if (cv::norm(TempX) > MaxValX) {
+			
 			MaxValX = cv::norm(TempX);
 			MaxIndexX = index3;
+			//std::cout << "Index = " << index3 << " cv::norm(TempX) = " << std::setiosflags (std::ios::fixed) << std::setprecision (10) << cv::norm(TempX) << std::endl;
+		
+			
 		}
 
 	}
 
-
+	
 	findhighestXNORMCUDA<<< 1, 1>>>(X_gpu, X.rows, X.cols); CHECK(cudaGetLastError(), "Calcula Maior Norma (1)");
 	
-	std::cout << "TESTANDO A MAIOR NORMA DE X: " << std::endl;
-	cudaMemcpyFromSymbol(&normX, MaxValXDevice, sizeof(normX), 0, cudaMemcpyDeviceToHost);
-	cudaMemcpyFromSymbol(&index, MaxIndexXDevice, sizeof(index), 0, cudaMemcpyDeviceToHost);
+	/*cudaMemcpy(&X_test.at<float>(0), X_gpu, X.rows*X.cols*sizeof(float) , cudaMemcpyDeviceToHost);
 
+
+	std::cout << "MATRIZ X CPU: \n";
+	for (int i=0;i<10;i++){
+		std::cout << std::endl;
+		for (int j=0;j<10;j++)
+			std::cout << X.at<float>(i,j) << " ";
+	}
+
+	std::cout << "MATRIZ X GPU: \n";
+	for (int i=0;i<10;i++){
+		std::cout << std::endl;
+		for (int j=0;j<10;j++)
+			std::cout << X_test.at<float>(i,j) << " ";
+	}
+	*/
+	
+
+	/*std::cout << "TESTANDO A MAIOR NORMA DE X: " << std::endl;
+	cudaMemcpyFromSymbol(&index, MaxIndexXDevice, sizeof(index), 0, cudaMemcpyDeviceToHost);
+	cudaMemcpyFromSymbol(&normX, MaxValXDevice, sizeof(normX), 0, cudaMemcpyDeviceToHost);
+	
 	std::cout << "\n Maior Norma CPU = " << MaxValX << " Index CPU = " << MaxIndexX  << std::endl;
 	std::cout << "\n Maior Norma GPU = " << normX << " Index GPU = " << index  << std::endl;
-	system("pause");
+	system("pause");*/
 
 	//cudaMemcpyFromSymbol(&MaxValX, MaxValXDevice, sizeof(MaxValX), 0, cudaMemcpyDeviceToHost); CHECK(cudaGetLastError(), "Copia Norma para o Host (0)");
 	cudaMemcpyFromSymbol(&MaxIndexX, MaxIndexXDevice, sizeof(MaxIndexX), 0, cudaMemcpyDeviceToHost); CHECK(cudaGetLastError(), "Copia o Index da Coluna para o Host (0)");
+	
 	
 }
 
@@ -356,22 +388,23 @@ void PLSCuda::gpu_FindHighestNormY(cv::Mat& Y, cv::Mat& TempY, double& MaxValY, 
 		}
 	}
 	
-	
+
+
 	findhighestYNORMCUDA<<< 1, 1>>>(Y_gpu, Y.rows, Y.cols); CHECK(cudaGetLastError(), "Calcula Maior Norma (2)");
 	
 
 	
-	std::cout << "TESTANDO A MAIOR NORMA DE Y: " << std::endl;
+	/*std::cout << "TESTANDO A MAIOR NORMA DE Y: " << std::endl;
 	cudaMemcpyFromSymbol(&normY, MaxValYDevice, sizeof(normY), 0, cudaMemcpyDeviceToHost); CHECK(cudaGetLastError(), "Copia Norma para o Host (1)");
 	cudaMemcpyFromSymbol(&index, MaxIndexYDevice, sizeof(index), 0, cudaMemcpyDeviceToHost); CHECK(cudaGetLastError(), "Copia o Index da Coluna para o Host (1)");
 	std::cout << "\n Maior Norma CPU = " << MaxValY << " Index CPU = " << MaxIndexY  << std::endl;
 	std::cout << "\n Maior Norma GPU = " << normY << " Index GPU = " << index  << std::endl;	
-	system("pause");
+	system("pause");*/
 
 	//cudaMemcpyFromSymbol(&MaxValY, MaxValYDevice, sizeof(MaxValY), 0, cudaMemcpyDeviceToHost); CHECK(cudaGetLastError(), "Copia Norma para o Host (1)");
 	cudaMemcpyFromSymbol(&MaxIndexY, MaxIndexYDevice, sizeof(MaxIndexY), 0, cudaMemcpyDeviceToHost); CHECK(cudaGetLastError(), "Copia o Index da Coluna para o Host (1)");
 	
-	
+
 
 }
 
@@ -1089,33 +1122,32 @@ __global__ void normCUDA(float *A, int size){
 
 __global__ void findhighestXNORMCUDA (float *X, int Xrows, int Xcols){
 
-	int i,j;
 	int Row = blockIdx.y*BLOCK_SIZE + threadIdx.y; 
 	int Col = blockIdx.x*BLOCK_SIZE + threadIdx.x;
-	double norm;
+	
+	double norm = 0.0;
+	
 
-	for (j = 0; j < Xcols; j++) {
-		
+	for (int j = 0; j < Xcols; j++) {
+	
 		if( 0 == threadIdx.x ) {
-			
-			double sum = 0;
-
-			for (i = 0; i < Xrows; i++) 
-				sum += X[i*Xcols +j] * X[i*Xcols+j];
+	
+			double sum = 0.0;
+		
+			for (int i = 0; i < Xrows; i++) 
+				sum += X[i*Xcols+j] * X[i*Xcols+j];
 
 			norm = sqrt(sum);
-
-			if (norm > MaxValXDevice){
-				MaxValXDevice = norm;
-				MaxIndexXDevice = j;
-			}
-
+	
 		}
-		
-		
-			
+
+		if (norm >= MaxValXDevice){
+				MaxValXDevice = norm;
+				MaxIndexXDevice = j;	
+		}		
+
 	}
-		
+			
 }
 
 
@@ -1139,7 +1171,7 @@ __global__ void findhighestYNORMCUDA (float *Y, int Yrows, int Ycols){
 
 		}
 		
-		if (norm > MaxValYDevice){
+		if (norm >= MaxValYDevice){
 			MaxValYDevice = norm;
 			MaxIndexYDevice = j;
 		}
@@ -1945,7 +1977,7 @@ void PLSCuda::testFINDHIGHESTNORM(){
 
 	srand( (unsigned)time(NULL) );
 
-	X.create(200, 40000, CV_32F);
+	X.create(100, 40005, CV_32F);
 	
 	for (i=0;i<X.rows;i++)
 		for(j=0;j<X.cols;j++)
