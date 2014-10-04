@@ -12,7 +12,12 @@
 #define __CUDACC__
 #endif
 
+inline void round_4(double *number){
 
+	//*number = floor( *number*pow(10, 3) - 0.5 )/pow(10, 3); 
+	((*number*10000 - (int)(*number*10000))) >= 0.5 ? *number = int((*number + 0.0001)*10000)/10000.0 : *number = int(*number*10000)/10000.0;
+	
+}
 
 void PLSCuda::CHECK(cudaError_t cudaStatus, std::string prefixMessage){
 	if (cudaStatus != cudaSuccess) {
@@ -198,27 +203,27 @@ void PLSCuda::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 		
 
 		// Saving Results to Outputs.
-		/*for (int index3 = 0; index3 != X.rows; index3++) {
+		for (int index3 = 0; index3 != X.rows; index3++) {
 			T.at<float>(index3, index1) = tTemp.at<float>(index3, 0);
 			U.at<float>(index3, index1) = uTemp.at<float>(index3, 0);			
-		}*/
+		}
 
 		tic("Salva Resultados em T e U"); gpu_SaveResults_T_U (X, T, U, tTemp, uTemp, T_TEST, U_TEST, index1, nMaxIterations, T_gpu, U_gpu, tTemp_gpu, uTemp_gpu );tac("Salva Resultados em T e U");
 
-		/*for (int index3 = 0; index3 != X.cols; index3++) {
+		for (int index3 = 0; index3 != X.cols; index3++) {
 			P.at<float>(index3, index1) = pTemp.at<float>(index3, 0);
 			W.at<float>(index3, index1) = wTemp.at<float>(index3, 0);			
-		}*/
+		}
 
 		tic("Salva Resultados em P e W"); gpu_SaveResults_P_W (X, P, W, pTemp, wTemp, Q_TEST,  W_TEST, index1, nMaxIterations, P_gpu, W_gpu, pTemp_gpu, wTemp_gpu );tac("Salva Resultados em P e W");
 
-		/*for (int index3 = 0; index3 != qTemp.rows; index3++) {
+		for (int index3 = 0; index3 != qTemp.rows; index3++) {
 			Q.at<float>(index3, index1) = qTemp.at<float>(index3, 0);	
-		}*/
+		}
 
 		tic("Salva Resultados em Q"); gpu_SaveResults_Q (Y, Q, qTemp, Q_TEST, index1, nMaxIterations, Q_gpu, qTemp_gpu); tac("Salva Resultados em Q");
 
-		//B.at<float>(index1, index1) = bTemp.at<float>(0, 0);
+		B.at<float>(index1, index1) = bTemp.at<float>(0, 0);
 
 		tic("Copia resultado para B"); cudaMemcpy(&B_gpu[index1*nMaxIterations + index1], &bTemp_gpu[0], sizeof(float),cudaMemcpyDeviceToDevice); CHECK(cudaGetLastError(), "Cópia do Device para o Device"); tac("Copia resultado para B");
 		
@@ -238,21 +243,13 @@ void PLSCuda::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 		std::cout << "\n Norma CPU = " << cv::norm(X) << " Norma GPU = " << normX << std::endl;
 		system("pause");*/
 
-		std::cout << " \nNorma GPU = " << normX << std::endl;
-		system("pause");
-
 		normCUDA<<< 1, 1>>>(Y_gpu, Y.rows*Y.cols); CHECK(cudaGetLastError(), "Calcula Norma (2)");
 		cudaMemcpyFromSymbol(&normY, normDevice, sizeof(normY), 0, cudaMemcpyDeviceToHost);
 		
 
-	    /*std::cout << "TESTANDO ( cv::norm(Y) == 0 ) " << std::endl;
+	   /* std::cout << "TESTANDO ( cv::norm(Y) == 0 ) " << std::endl;
 		std::cout << "\n Norma CPU = " << cv::norm(Y) << " Norma GPU = " << normY << std::endl;
 		system("pause");*/
-
-		// Checking the residue
-		/*if ((cv::norm(X) == 0) || (cv::norm(Y) == 0)) {
-			break;
-		}*/
 
 		if ((normX == 0) || (normY == 0)) {
 			break;
@@ -274,6 +271,8 @@ void PLSCuda::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 	for(int i=0;i<20;i++){
 		std::cout << bstar.at<float>(i,0) << " " << std::endl;
 	}
+
+	system("pause");
 
 	///FREE GPU AQUI
 	cudaFree(X_gpu);
@@ -318,16 +317,15 @@ void PLSCuda::gpu_FindHighestNormX(cv::Mat X, cv::Mat TempX, double& MaxValX, in
 			TempX.at<float>(index2, 0) = X.at<float>(index2, index3);
 		}
 
-		
-		//if(cv::norm(TempX) != MaxValX)
-			//std::cout << "Index = " << index3 << " cv::norm(TempX) = " << cv::norm(TempX) << " MaxValX = " << MaxValX <<std::endl;
+	 
+			double cv_norm_TempX = cv::norm(TempX);
+			round_4(&cv_norm_TempX);
 
-		if (cv::norm(TempX) > MaxValX) {
+		if (cv_norm_TempX > MaxValX) {
 			
-			MaxValX = cv::norm(TempX);
+			MaxValX = cv_norm_TempX;
 			MaxIndexX = index3;
-			//std::cout << "Index = " << index3 << " cv::norm(TempX) = " << std::setiosflags (std::ios::fixed) << std::setprecision (10) << cv::norm(TempX) << std::endl;
-		
+			
 			
 		}
 
@@ -365,7 +363,8 @@ void PLSCuda::gpu_FindHighestNormX(cv::Mat X, cv::Mat TempX, double& MaxValX, in
 
 	//cudaMemcpyFromSymbol(&MaxValX, MaxValXDevice, sizeof(MaxValX), 0, cudaMemcpyDeviceToHost); CHECK(cudaGetLastError(), "Copia Norma para o Host (0)");
 	cudaMemcpyFromSymbol(&MaxIndexX, MaxIndexXDevice, sizeof(MaxIndexX), 0, cudaMemcpyDeviceToHost); CHECK(cudaGetLastError(), "Copia o Index da Coluna para o Host (0)");
-	
+	/*std::cout << " Index CPU (Maior Norma de X) = " << MaxIndexX  << std::endl;
+	system("pause");*/
 	
 }
 
@@ -381,9 +380,12 @@ void PLSCuda::gpu_FindHighestNormY(cv::Mat& Y, cv::Mat& TempY, double& MaxValY, 
 		for (int index2 = 0; index2 < Y.rows; index2++) {
 			TempY.at<float>(index2, 0) = Y.at<float>(index2, index3);
 		}
+		
+		double cv_norm_TempY = cv::norm(TempY);
+		round_4(&cv_norm_TempY);
 
-		if (cv::norm(TempY) > MaxValY) {
-			MaxValY = cv::norm(TempY);
+		if (cv_norm_TempY > MaxValY) {
+			MaxValY = cv_norm_TempY;
 			MaxIndexY = index3;
 		}
 	}
@@ -404,7 +406,8 @@ void PLSCuda::gpu_FindHighestNormY(cv::Mat& Y, cv::Mat& TempY, double& MaxValY, 
 	//cudaMemcpyFromSymbol(&MaxValY, MaxValYDevice, sizeof(MaxValY), 0, cudaMemcpyDeviceToHost); CHECK(cudaGetLastError(), "Copia Norma para o Host (1)");
 	cudaMemcpyFromSymbol(&MaxIndexY, MaxIndexYDevice, sizeof(MaxIndexY), 0, cudaMemcpyDeviceToHost); CHECK(cudaGetLastError(), "Copia o Index da Coluna para o Host (1)");
 	
-
+	/*std::cout << " Index CPU (Maior Norma de Y) = " << MaxIndexY  << std::endl;
+	system("pause");*/
 
 }
 
@@ -420,17 +423,20 @@ void PLSCuda::gpu_SaveResults_tTemp_uTemp(cv::Mat X, cv::Mat Y, cv::Mat tTemp, c
 	copyColumnToVectorCUDA<<< grid_size , dimBlock >>>(X_gpu, tTemp_gpu, X.rows, X.cols, MaxIndexX); CHECK(cudaGetLastError(), "Copia Coluna (2)");
 	copyColumnToVectorCUDA<<< grid_size , dimBlock >>>(Y_gpu, uTemp_gpu, Y.rows, Y.cols, MaxIndexY); CHECK(cudaGetLastError(), "Copia Coluna (3)");
 
-	std::cout << "TESTANDO (tTemp.at<float>(index3, 0) = X.at<float>(index3, MaxIndexX)) " << std::endl;
+	/*std::cout << "TESTANDO (tTemp.at<float>(index3, 0) = X.at<float>(index3, MaxIndexX)) " << std::endl;
 	cudaMemcpy(&tTemp_TEST.at<float>(0), tTemp_gpu, X.rows*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (0)");
 
 	for (int i = 0; i < X.rows;i++){
 		if(tTemp.at<float>(i,0)!= tTemp_TEST.at<float>(i,0))
 			std::cout << " Original = " << tTemp.at<float>(i,0) << " GPU = " << tTemp_TEST.at<float>(i,0) << std::endl;  
+	}*/
+
+	/*for (int i = 0; i < 5;i++){
+		std::cout << "GPU = " << tTemp_TEST.at<float>(i,0) << std::endl;
 	}
+	system("pause");*/
 
-	system("pause");
-
-	std::cout << "TESTANDO (uTemp.at<float>(index3, 0) = Y.at<float>(index3, MaxIndexY)) " << std::endl;
+	/*std::cout << "TESTANDO (uTemp.at<float>(index3, 0) = Y.at<float>(index3, MaxIndexY)) " << std::endl;
 	cudaMemcpy(&uTemp_TEST.at<float>(0), uTemp_gpu, Y.rows*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (0)");
 
 	for (int i = 0; i < Y.rows;i++){
@@ -438,7 +444,11 @@ void PLSCuda::gpu_SaveResults_tTemp_uTemp(cv::Mat X, cv::Mat Y, cv::Mat tTemp, c
 			std::cout << " Original = " << uTemp.at<float>(i,0) << " GPU = " << uTemp_TEST.at<float>(i,0) << std::endl;  
 	}
 
-	system("pause");
+	for (int i = 0; i < 5;i++){
+		std::cout <<" GPU = " << uTemp_TEST.at<float>(i,0) << std::endl;  
+	}
+
+	system("pause");*/
 	
 }
 
@@ -567,7 +577,7 @@ void PLSCuda::gpu_Iterations(cv::Mat X, cv::Mat Y, cv::Mat& tTemp, cv::Mat& uTem
 		mulTransbyNormalCUDA <<< dimGrid, dimBlock >>>(X_gpu, uTemp_gpu, wTemp_gpu, X.rows, X.cols, Y.rows, 1); CHECK(cudaGetLastError(), "Multiplica Tranposta (1)");	
 		//tac("mulT1");
 
-		//wTemp = X.t() * uTemp;
+		wTemp = X.t() * uTemp;
 
 		/*std::cout << "TESTANDO (wTemp = X.t() * uTemp) " << std::endl;
 		cudaMemcpy(&wTemp_TEST.at<float>(0), wTemp_gpu,X.cols*uTemp.cols*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (0)");
@@ -588,7 +598,7 @@ void PLSCuda::gpu_Iterations(cv::Mat X, cv::Mat Y, cv::Mat& tTemp, cv::Mat& uTem
 		divVectorbyNormCUDA <<< grid_size, BLOCK_SIZE >>> (wTemp_gpu, X.cols);  CHECK(cudaGetLastError(), "Dividir Vetor por um valor (1)");					
 		//tac("div1");
 
-		//wTemp = wTemp / cv::norm(wTemp);
+		wTemp = wTemp / cv::norm(wTemp);
 		
 		/*std::cout << "TESTANDO (wTemp = wTemp / cv::norm(wTemp)) " << std::endl; 
 		cudaMemcpy(&wTemp_TEST2.at<float>(0), wTemp_gpu,X.cols*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -606,7 +616,7 @@ void PLSCuda::gpu_Iterations(cv::Mat X, cv::Mat Y, cv::Mat& tTemp, cv::Mat& uTem
 		mulCUDA <<< dimGrid2, dimBlock >>> (X_gpu, wTemp_gpu, tNew_gpu, X.rows, X.cols, X.cols, 1); CHECK(cudaGetLastError(), "Multiplica (1)");
 		//tac("mul1");
 
-		//tNew = X * wTemp;
+		tNew = X * wTemp;
 		
 		/*std::cout << "TESTANDO (tNew = X * wTemp) " << std::endl; 
 		cudaMemcpy(&tNew_TEST.at<float>(0), tNew_gpu,X.rows*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -624,7 +634,7 @@ void PLSCuda::gpu_Iterations(cv::Mat X, cv::Mat Y, cv::Mat& tTemp, cv::Mat& uTem
 		mulTransbyNormalCUDA <<< dimGrid3, dimBlock >>>(Y_gpu, tNew_gpu, qTemp_gpu, Y.rows, Y.cols, X.rows, 1);CHECK(cudaGetLastError(), "Multiplica Transposta (2)");
 		//tac("mulT2");
 		
-		//qTemp = Y.t() * tNew;
+		qTemp = Y.t() * tNew;
 
 		/*std::cout << "TESTANDO (qTemp = Y.t() * tNew) " << std::endl;
 		cudaMemcpy(&qTemp_TEST.at<float>(0), qTemp_gpu, Y.cols*1*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -643,7 +653,7 @@ void PLSCuda::gpu_Iterations(cv::Mat X, cv::Mat Y, cv::Mat& tTemp, cv::Mat& uTem
 		divVectorbyNormCUDA <<< grid_size , BLOCK_SIZE >>> (qTemp_gpu, Y.cols); CHECK(cudaGetLastError(), "Dividir Vetor por um valor (2)");
 		//tac("div2");
 
-		//qTemp = qTemp / cv::norm(qTemp);
+		qTemp = qTemp / cv::norm(qTemp);
 		
 		/*std::cout << "TESTANDO (qTemp = qTemp / cv::norm(qTemp)) " << std::endl;
 		cudaMemcpy(&qTemp_TEST2.at<float>(0), qTemp_gpu, Y.cols*1*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -659,7 +669,7 @@ void PLSCuda::gpu_Iterations(cv::Mat X, cv::Mat Y, cv::Mat& tTemp, cv::Mat& uTem
 		mulCUDA <<< dimGrid4, dimBlock >>> (Y_gpu, qTemp_gpu, uTemp_gpu, Y.rows, Y.cols, Y.cols, 1); CHECK(cudaGetLastError(), "Multiplica (2)");
 		//tac("mul2");
 
-		//uTemp = Y * qTemp;
+		uTemp = Y * qTemp;
 
 		/*std::cout << "TESTANDO (uTemp = Y * qTemp) " << std::endl;
 		cudaMemcpy(&uTemp_TEST.at<float>(0), uTemp_gpu, Y.rows*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -680,7 +690,7 @@ void PLSCuda::gpu_Iterations(cv::Mat X, cv::Mat Y, cv::Mat& tTemp, cv::Mat& uTem
 
 		
 
-		//TempVal = cv::norm (tTemp - tNew);		
+		TempVal = cv::norm (tTemp - tNew);		
 		
 		//std::cout << "Iteracao do ITERATIONS: " << index2 << std::endl  << " GPU = " << normHost << " TermCrit2 = " << TermCrit2 << std::endl;  		
 		//system("pause");
@@ -703,7 +713,7 @@ void PLSCuda::gpu_Iterations(cv::Mat X, cv::Mat Y, cv::Mat& tTemp, cv::Mat& uTem
 		copyVectorCUDA<<< dimGrid5 , dimBlock >>>( tNew_gpu, tTemp_gpu, X.rows); CHECK(cudaGetLastError(), "Copia Vetor (1)");
 		//tac("final");
 		
-		//tTemp = tNew.clone();
+		tTemp = tNew.clone();
 		
 		/*std::cout << "TESTANDO (tTemp = tNew.clone()) " << std::endl;
 		cudaMemcpy(&tTemp_TEST.at<float>(0), tTemp_gpu, X.rows*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -768,7 +778,7 @@ void PLSCuda::gpu_Deflation(cv::Mat& X,cv::Mat& Y, cv::Mat& tTemp, cv::Mat& uTem
 		mulTransbyNormalCUDA <<< dimGrid, dimBlock >>>(tTemp_gpu, tTemp_gpu, tNorm_gpu, X.rows, 1, X.rows, 1); CHECK(cudaGetLastError(), "Multiplica Tranposta (3)");
 		//tac("mulT3");
 
-		//tNorm = tTemp.t() * tTemp;
+		tNorm = tTemp.t() * tTemp;
 		
 		/*std::cout << "TESTANDO (tNorm = tTemp.t() * tTemp) " << std::endl;
 		cudaMemcpy(&tNorm_TEST.at<float>(0), tNorm_gpu, tNorm.rows*tNorm.cols*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -777,7 +787,8 @@ void PLSCuda::gpu_Deflation(cv::Mat& X,cv::Mat& Y, cv::Mat& tTemp, cv::Mat& uTem
 		
 		system("pause");*/
 
-		//bTemp = uTemp.t() * tTemp;
+		bTemp = uTemp.t() * tTemp;
+
 		//tic("mulT4");
 		mulTransbyNormalCUDA <<< dimGrid2, dimBlock >>>(uTemp_gpu, tTemp_gpu, bTemp_gpu, Y.rows, 1, X.rows, 1); CHECK(cudaGetLastError(), "Multiplica Tranposta (4)");
 		//tac("mulT4");
@@ -791,7 +802,8 @@ void PLSCuda::gpu_Deflation(cv::Mat& X,cv::Mat& Y, cv::Mat& tTemp, cv::Mat& uTem
 		
 		system("pause");*/
 
-		//bTemp = bTemp / tNorm.at<float>(0, 0);
+		bTemp = bTemp / tNorm.at<float>(0, 0);
+
 		grid_size = (int)ceil((float)1/BLOCK_SIZE); // ceil arredonda o valor para cima
 		//tic("div2");
 		divVectorbyScalarCUDA <<< grid_size, BLOCK_SIZE >>> (bTemp_gpu, 1, tNorm.at<float>(0,0));  CHECK(cudaGetLastError(), "Dividir Vetor por um valor (3)");
@@ -807,11 +819,12 @@ void PLSCuda::gpu_Deflation(cv::Mat& X,cv::Mat& Y, cv::Mat& tTemp, cv::Mat& uTem
 		system("pause");*/
 
 		//pTemp = X.t() * tTemp;
+
 		//tic("mulT5");
 		mulTransbyNormalCUDA <<< dimGrid3, dimBlock >>>(X_gpu, tTemp_gpu, pTemp_gpu, X.rows, X.cols, X.rows, 1); CHECK(cudaGetLastError(), "Multiplica Tranposta (5)");
 		//tac("mulT5");
 
-		//pTemp = X.t() * tTemp;
+		pTemp = X.t() * tTemp;
 		
 		/*std::cout << "TESTANDO (pTemp = X.t() * tTemp) " << std::endl;
 		cudaMemcpy(&pTemp_TEST.at<float>(0), pTemp_gpu, X.cols*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -825,12 +838,13 @@ void PLSCuda::gpu_Deflation(cv::Mat& X,cv::Mat& Y, cv::Mat& tTemp, cv::Mat& uTem
 		
 
 		//pTemp = pTemp / tNorm.at<float>(0, 0);
+
 		grid_size = (int)ceil((float)X.cols/BLOCK_SIZE); // ceil arredonda o valor para cima
 		//tic("div3");
 		divVectorbyScalarCUDA <<< grid_size, BLOCK_SIZE >>> (pTemp_gpu, X.cols, tNorm.at<float>(0,0));  CHECK(cudaGetLastError(), "Dividir Vetor por um valor (4)");
 		//tac("div3");
 
-		//pTemp = pTemp / tNorm.at<float>(0, 0);
+		pTemp = pTemp / tNorm.at<float>(0, 0);
 
 		/*std::cout << "TESTANDO (/pTemp = pTemp / tNorm.at<float>(0, 0)) " << std::endl;
 		cudaMemcpy(&pTemp_TEST.at<float>(0), pTemp_gpu, X.cols*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -847,7 +861,7 @@ void PLSCuda::gpu_Deflation(cv::Mat& X,cv::Mat& Y, cv::Mat& tTemp, cv::Mat& uTem
 		mulNormalbyTransCUDA <<< dimGrid4, dimBlock >>>(tTemp_gpu, pTemp_gpu, hTemp_gpu, X.rows, 1, X.cols, 1); CHECK(cudaGetLastError(), "Multiplica Tranposta (6)");
 		//tac("mulT6");
 
-		//hTemp = tTemp * pTemp.t();
+		hTemp = tTemp * pTemp.t();
 
 		/*std::cout << "TESTANDO (hTemp = tTemp * pTemp.t()) " << std::endl;
 		cudaMemcpy(&hTemp_TEST.at<float>(0), hTemp_gpu, X.rows*X.cols*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -865,7 +879,7 @@ void PLSCuda::gpu_Deflation(cv::Mat& X,cv::Mat& Y, cv::Mat& tTemp, cv::Mat& uTem
 			
 		subCUDA <<<  dimGrid5, dimBlock  >>> (X_gpu, hTemp_gpu, X_gpu, X.cols, X.rows*X.cols); CHECK(cudaGetLastError(), "Subtrai duas matrizes (1)");
 		
-		//X = X - hTemp;
+		X = X - hTemp;
 		
 		/*std::cout << "TESTANDO (X = X - htemp) " << std::endl;
 		cudaMemcpy(&X_TEST.at<float>(0), X_gpu, X.rows*X.cols*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -885,7 +899,7 @@ void PLSCuda::gpu_Deflation(cv::Mat& X,cv::Mat& Y, cv::Mat& tTemp, cv::Mat& uTem
 		mulNormalbyTransCUDA <<< dimGrid6, dimBlock >>>(tTemp_gpu, qTemp_gpu, gTemp_gpu, X.rows, 1, Y.cols, 1); CHECK(cudaGetLastError(), "Multiplica Tranposta (7)");
 		//tac("mulT7");
 
-		//gTemp = tTemp * qTemp.t();
+		gTemp = tTemp * qTemp.t();
 		
 		/*std::cout << "TESTANDO (gTemp = tTemp * qTemp.t()) " << std::endl;
 		cudaMemcpy(&gTemp_TEST.at<float>(0), gTemp_gpu, X.rows * Y.cols * sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -907,7 +921,7 @@ void PLSCuda::gpu_Deflation(cv::Mat& X,cv::Mat& Y, cv::Mat& tTemp, cv::Mat& uTem
 
 		multiplyMatrixbyElementCUDA<<< dimGrid7, dimBlock>>>(gTemp_gpu, bTemp_gpu, X.rows, Y.cols); CHECK(cudaGetLastError(), "Multiplica A = A*B[0][0]");
 
-		//gTemp = bTemp.at<float>(0, 0) * gTemp;
+		gTemp = bTemp.at<float>(0, 0) * gTemp;
 
 		/*std::cout << "TESTANDO (gTemp = bTemp.at<float>(0, 0) * gTemp) " << std::endl;	
 		cudaMemcpy(&gTemp_TEST.at<float>(0), gTemp_gpu, X.rows*Y.cols*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -925,7 +939,7 @@ void PLSCuda::gpu_Deflation(cv::Mat& X,cv::Mat& Y, cv::Mat& tTemp, cv::Mat& uTem
 		
 		subCUDA <<< dimGrid8 , dimBlock >>> (Y_gpu, gTemp_gpu, Y_gpu, Y.cols, Y.rows*Y.cols); CHECK(cudaGetLastError(), "Subtrai dois vetores (3)");
 	
-		//Y = Y - gTemp;
+		Y = Y - gTemp;
 
 		/*std::cout << "TESTANDO (Y = Y - gTemp) " << std::endl;
 		cudaMemcpy(&Y_TEST.at<float>(0), Y_gpu, Y.rows*Y.cols*sizeof(float) , cudaMemcpyDeviceToHost);CHECK(cudaGetLastError(), "Copia dados do device para o HOST (2)");
@@ -1138,13 +1152,15 @@ __global__ void findhighestXNORMCUDA (float *X, int Xrows, int Xcols){
 				sum += X[i*Xcols+j] * X[i*Xcols+j];
 
 			norm = sqrt(sum);
-	
+			((norm*10000 - (int)(norm*10000))) >= 0.5 ? norm = int((norm + 0.0001)*10000)/10000.0 : norm = int(norm*10000)/10000.0;
+		
+
 		}
 
-		if (norm >= MaxValXDevice){
+		if (norm > MaxValXDevice){
 				MaxValXDevice = norm;
 				MaxIndexXDevice = j;	
-		}		
+		}	
 
 	}
 			
@@ -1168,14 +1184,16 @@ __global__ void findhighestYNORMCUDA (float *Y, int Yrows, int Ycols){
 				sum += Y[i*Ycols +j] * Y[i*Ycols+j];
 
 			norm = sqrt(sum);
-
-		}
-		
-		if (norm >= MaxValYDevice){
-			MaxValYDevice = norm;
-			MaxIndexYDevice = j;
-		}
+			((norm*10000 - (int)(norm*10000))) >= 0.5 ? norm = int((norm + 0.0001)*10000)/10000.0 : norm = int(norm*10000)/10000.0;
+			
+		}	
 	
+		if (norm > MaxValYDevice){
+				MaxValYDevice = norm;
+				MaxIndexYDevice = j;
+		
+		}
+
 	}
 
 }
@@ -1974,22 +1992,28 @@ void PLSCuda::testFINDHIGHESTNORM(){
 	double normX, MaxValX = 0;
 	int index, index3;
 	int MaxIndexX = -10;
+	float a = 0.01;
 
 	srand( (unsigned)time(NULL) );
 
-	X.create(100, 40005, CV_32F);
+	X.create(3, 3, CV_32F);
 	
-	for (i=0;i<X.rows;i++)
-		for(j=0;j<X.cols;j++)
-			X.at<float>(i,j) = rand()%10;
-			
-	
-	/*std::cout << "Matriz X:" << std::endl;
+	X.at<float>(0,0) = 1;
+	X.at<float>(0,1) = 1.0001;
+	X.at<float>(0,2) = 1.0001;
+	X.at<float>(1,0) = 1;
+	X.at<float>(1,1) = 1.0001;
+	X.at<float>(1,2) = 1.0001;
+	X.at<float>(2,0) = 1;
+	X.at<float>(2,1) = 1.0001;
+	X.at<float>(2,2) = 1.00009888;
+
+	std::cout << "Matriz X:" << std::endl;
 	for (i=0;i<X.rows;i++){
 		std::cout <<std::endl;
 		for(j=0;j<X.cols;j++)
 			std::cout << X.at<float>(i,j) << " ";
-	}*/
+	}
 	
 
 
@@ -2000,8 +2024,14 @@ void PLSCuda::testFINDHIGHESTNORM(){
 			TempX.at<float>(index, 0) = X.at<float>(index, index2);
 		}
 
-		if (cv::norm(TempX) > MaxValX) {
-			MaxValX = cv::norm(TempX);
+		double cv_norm_TempX = cv::norm(TempX);
+		round_4(&cv_norm_TempX);
+		std::cout << "\nIndex = " << index2 << " Norma = " << cv::norm(TempX);
+		std::cout << "\nIndex = " << index2 << " Norma ARREDONDADA = " << cv_norm_TempX;
+
+		if (cv_norm_TempX > MaxValX) {
+	
+			MaxValX = cv_norm_TempX;
 			MaxIndexX = index2;
 	}
 
@@ -2011,6 +2041,16 @@ void PLSCuda::testFINDHIGHESTNORM(){
 	
 	findhighestXNORMCUDA<<< 1, 1>>>(X_gpu, X.rows, X.cols); CHECK(cudaGetLastError(), "Calcula Maior Norma (1)");
 	
+	/*double n = 3.446649;
+
+	std::cout << "\nNumero ANTES = " << n << std::endl;
+	std::cout << "(int)n = " << (int)n << std::endl;
+	//std::cout << "((n*10000 - (int)(n*10000))) = " << ((n*10000 - (int)(n*10000))) << std::endl;
+	((n*10000 - (int)(n*10000))) >= 0.5 ? n = int((n + 0.0001)*10000)/10000.0 : n = int(n*10000)/10000.0;
+	
+	std::cout << "Numero DEPOIS = " << n << std::endl;
+
+	system("pause");*/
 
 	cudaMemcpyFromSymbol(&normX, MaxValXDevice, sizeof(normX), 0, cudaMemcpyDeviceToHost);
 	cudaMemcpyFromSymbol(&index3, MaxIndexXDevice, sizeof(index3), 0, cudaMemcpyDeviceToHost);
@@ -2108,6 +2148,9 @@ void PLSCuda::test(){
 	//testMULTIPLICAPORESCALAR(); // Teste de multiplicacao de uma matriz por um escalar.
 	//testSETAELEMENTO(); // Teste o qual seta o valor de um elemento em uma matriz.
 	//testNORMAMATRIZ(); // Teste o qual calcula o valor da norma de uma matriz.
-	testFINDHIGHESTNORM(); // Teste o qual calcula a norma de cada coluna de uma matriz, e depois imprime na tela o maior valor encontrado.
+	//testFINDHIGHESTNORM(); // Teste o qual calcula a norma de cada coluna de uma matriz, e depois imprime na tela o maior valor encontrado.
 	//testMULTIPLICAPORPRIMEIROELEMENTO(); // Teste o qual multiplica uma matriz pelo primeiro elemento de outra matriz.
+
+
+
 }
