@@ -1,5 +1,12 @@
 #include "PLSCpu.h"
 
+inline void round_4(double *number){
+
+	//*number = floor( *number*pow(10, 3) - 0.5 )/pow(10, 3); 
+	((*number*10000 - (int)(*number*10000))) >= 0.5 ? *number = int((*number + 0.0001)*10000)/10000.0 : *number = int(*number*10000)/10000.0;
+	
+}
+
 PLSCpu::PLSCpu(bool debug)
 	: PLS(debug){
 
@@ -73,6 +80,10 @@ void PLSCpu::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 			for (int index2 = 0; index2 < X.rows; index2++) {
 				TempX.at<float>(index2, 0) = X.at<float>(index2, index3);
 			}
+
+			double cv_norm_TempX = cv::norm(TempX);
+			round_4(&cv_norm_TempX);
+
 			if (cv::norm(TempX) > MaxValX) {
 				MaxValX = cv::norm(TempX);
 				MaxIndexX = index3;
@@ -84,6 +95,9 @@ void PLSCpu::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 			for (int index2 = 0; index2 < Y.rows; index2++) {
 				TempY.at<float>(index2, 0) = Y.at<float>(index2, index3);
 			}
+			double cv_norm_TempY = cv::norm(TempY);
+			round_4(&cv_norm_TempY);
+
 			if (cv::norm(TempY) > MaxValY) {
 				MaxValY = cv::norm(TempY);
 				MaxIndexY = index3;
@@ -101,7 +115,7 @@ void PLSCpu::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 		tic("GPU Iterations");
 		// Iteration for Outer Modelling
 		for (int index2 = 0; index2 < nMaxOuter; index2++) {
-			std::cout << " Iteracao do ITERATIONS: " << index2 << std::endl;
+			//std::cout << " Iteracao do ITERATIONS: " << index2 << std::endl;
 			//tic("mulT1"); 
 			wTemp = X.t() * uTemp;				
 			//tac("mulT1");
@@ -192,5 +206,7 @@ void PLSCpu::run(cv::Mat feats, cv::Mat labels, const int nfactors){
 	for(int i=0;i<20;i++){
 		std::cout << bstar.at<float>(i,0) << " " << std::endl;
 	}
+
+	system("pause");
 
 }
