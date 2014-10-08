@@ -44,5 +44,6 @@ protected:
 	void testNORMAMATRIZ();
 	void testFINDHIGHESTNORM();
 	void testMULTIPLICAPORPRIMEIROELEMENTO();
+	void testDIVVETORPORVETOR();
 
 };
